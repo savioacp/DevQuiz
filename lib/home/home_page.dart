@@ -1,3 +1,7 @@
+import 'package:dev_quiz/challenge/widgets/quiz/quiz_widget.dart';
+import 'package:dev_quiz/core/app_colors.dart';
+import 'package:dev_quiz/home/home_controller.dart';
+import 'package:dev_quiz/home/home_state.dart';
 import 'package:dev_quiz/home/widgets/appbar/appbar_widget.dart';
 import 'package:dev_quiz/home/widgets/level_button/level_button_widget.dart';
 import 'package:dev_quiz/home/widgets/quiz_card/quiz_card_widget.dart';
@@ -9,10 +13,31 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final controller = HomeController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    setState(() {
+      Future.sync(() => controller.loadQuizzes());
+      Future.sync(() => controller.loadUser());
+      controller.state = HomeState.success;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (controller.state != HomeState.success)
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation(AppColors.lightGreen),
+          ),
+        ),
+      );
     return Scaffold(
-      appBar: AppBarWidget(),
+      appBar: AppBarWidget(user: controller.user!),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -37,14 +62,9 @@ class _HomePageState extends State<HomePage> {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 crossAxisCount: 2,
-                children: [
-                  QuizCardWidget(),
-                  QuizCardWidget(),
-                  QuizCardWidget(),
-                  QuizCardWidget(),
-                  QuizCardWidget(),
-                  QuizCardWidget(),
-                ],
+                children: controller.quizzes!
+                    .map((q) => QuizCardWidget(quiz: q))
+                    .toList(),
               ),
             ),
           ],
